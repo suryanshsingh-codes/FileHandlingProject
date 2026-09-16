@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Handling System</title>
+    <style>
+        :root {
+            --bg: #050608;
+            --card: #101216;
+            --gold: #F59E0B;
+            --text: #F5F5F5;
+            --text-secondary: #A7A9AD;
+            --border: #8A5A00;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--gold);
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .tab:hover, .tab.active {
+            background: var(--gold);
+            color: #050608;
+            border-color: var(--gold);
+        }
+
+        .panel {
+            background: var(--card);
+            padding: 30px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            display: none;
+        }
+
+        .panel.active { display: block; }
+
+        h2 {
+            color: var(--gold);
+            margin-bottom: 20px;
+            font-size: 22px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            background: #0A0C10;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            font-size: 14px;
+            margin-bottom: 15px;
+            font-family: inherit;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--gold);
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            background: var(--gold);
+            color: #050608;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn:hover {
+            background: #FFB000;
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--gold);
+            color: var(--gold);
+        }
+
+        .file-list {
+            background: #0A0C10;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .file-item {
+            padding: 8px 12px;
+            color: var(--text-secondary);
+            border-bottom: 1px solid #1A1D22;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .file-item:hover {
+            color: var(--gold);
+        }
+
+        .file-item:last-child { border-bottom: none; }
+
+        .message {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .message.success {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid #10B981;
+            color: #10B981;
+            display: block;
+        }
+
+        .message.error {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid #EF4444;
+            color: #EF4444;
+            display: block;
+        }
+
+        .file-content {
+            background: #0A0C10;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+            border: 1px solid var(--border);
+            white-space: pre-wrap;
+            word-break: break-word;
+            color: var(--text);
+            font-family: monospace;
+            font-size: 13px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-secondary);
+            padding: 20px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📂 File Handling System</h1>
+        <p class="subtitle">CRUD operations on files — create, read, update, delete</p>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('create')">✏️ Create</div>
+            <div class="tab" onclick="switchTab('read')">📖 Read</div>
+            <div class="tab" onclick="switchTab('update')">🔄 Update</div>
+            <div class="tab" onclick="switchTab('delete')">🗑️ Delete</div>
+        </div>
+
+        <!-- CREATE -->
+        <div class="panel active" id="create">
+            <h2>Create File</h2>
+            <div class="message" id="createMsg"></div>
+            <label>File Name:</label>
+            <input type="text" id="createName" placeholder="e.g., notes.txt">
+            <label>Content:</label>
+            <textarea id="createContent" placeholder="Write your content here..."></textarea>
+            <button class="btn" onclick="createFile()">Create File</button>
+        </div>
+
+        <!-- READ -->
+        <div class="panel" id="read">
+            <h2>Read File</h2>
+            <div class="message" id="readMsg"></div>
+            <div class="file-list" id="readFileList"></div>
+            <label>File Name:</label>
+            <input type="text" id="readName" placeholder="e.g., notes.txt">
+            <button class="btn" onclick="readFile()">Read File</button>
+            <div class="file-content" id="fileContent" style="display: none;"></div>
+        </div>
+
+        <!-- UPDATE -->
+        <div class="panel" id="update">
+            <h2>Update File</h2>
+            <div class="message" id="updateMsg"></div>
+            <div class="file-list" id="updateFileList"></div>
+            <label>File Name:</label>
+            <input type="text" id="updateName" placeholder="e.g., notes.txt">
+            <label>Action:</label>
+            <select id="updateAction">
+                <option value="overwrite">Overwrite</option>
+                <option value="append">Append</option>
+            </select>
+            <label>New Content:</label>
+            <textarea id="updateContent" placeholder="New content..."></textarea>
+            <button class="btn" onclick="updateFile()">Update File</button>
+        </div>
+
+        <!-- DELETE -->
+        <div class="panel" id="delete">
+            <h2>Delete File</h2>
+            <div class="message" id="deleteMsg"></div>
+            <div class="file-list" id="deleteFileList"></div>
+            <label>File Name:</label>
+            <input type="text" id="deleteName" placeholder="e.g., notes.txt">
+            <button class="btn" onclick="deleteFile()">Delete File</button>
+        </div>
+    </div>
+
+    <script>
+        // Local storage as our "file system"
+        function getFiles() {
+            return JSON.parse(localStorage.getItem('files') || '{}');
+        }
+
+        function saveFiles(files) {
+            localStorage.setItem('files', JSON.stringify(files));
+        }
+
+        function showMessage(id, text, type) {
+            const msg = document.getElementById(id);
+            msg.textContent = text;
+            msg.className = 'message ' + type;
+            setTimeout(() => { msg.className = 'message'; }, 3000);
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(tab).classList.add('active');
+            
+            // Refresh file lists
+            listFiles('readFileList', 'readName');
+            listFiles('updateFileList', 'updateName');
+            listFiles('deleteFileList', 'deleteName');
+        }
+
+        function listFiles(listId, inputId) {
+            const files = getFiles();
+            const list = document.getElementById(listId);
+            const keys = Object.keys(files);
+            
+            if (keys.length === 0) {
+                list.innerHTML = '<div class="empty-state">No files yet. Create one first!</div>';
+                return;
+            }
+            
+            list.innerHTML = keys.map(name => 
+                `<div class="file-item" onclick="document.getElementById('${inputId}').value='${name}'">📄 ${name}</div>`
+            ).join('');
+        }
+
+        function createFile() {
+            const name = document.getElementById('createName').value.trim();
+            const content = document.getElementById('createContent').value;
+            
+            if (!name) {
+                showMessage('createMsg', 'Please enter a file name!', 'error');
+                return;
+            }
+            
+            const files = getFiles();
+            
+            if (files[name]) {
+                showMessage('createMsg', 'File already exists!', 'error');
+                return;
+            }
+            
+            files[name] = content;
+            saveFiles(files);
+            showMessage('createMsg', '✅ File created successfully!', 'success');
+            
+            document.getElementById('createName').value = '';
+            document.getElementById('createContent').value = '';
+        }
+
+        function readFile() {
+            const name = document.getElementById('readName').value.trim();
+            const files = getFiles();
+            
+            if (!name || !files[name]) {
+                showMessage('readMsg', 'File not found!', 'error');
+                return;
+            }
+            
+            showMessage('readMsg', '✅ File read successfully!', 'success');
+            const contentDiv = document.getElementById('fileContent');
+            contentDiv.textContent = files[name] || '(empty file)';
+            contentDiv.style.display = 'block';
+        }
+
+        function updateFile() {
+            const name = document.getElementById('updateName').value.trim();
+            const action = document.getElementById('updateAction').value;
+            const content = document.getElementById('updateContent').value;
+            const files = getFiles();
+            
+            if (!name || !files[name]) {
+                showMessage('updateMsg', 'File not found!', 'error');
+                return;
+            }
+            
+            if (action === 'overwrite') {
+                files[name] = content;
+            } else {
+                files[name] = (files[name] || '') + content;
+            }
+            
+            saveFiles(files);
+            showMessage('updateMsg', '✅ File updated successfully!', 'success');
+            document.getElementById('updateContent').value = '';
+        }
+
+        function deleteFile() {
+            const name = document.getElementById('deleteName').value.trim();
+            const files = getFiles();
+            
+            if (!name || !files[name]) {
+                showMessage('deleteMsg', 'File not found!', 'error');
+                return;
+            }
+            
+            if (!confirm(`Delete "${name}"?`)) return;
+            
+            delete files[name];
+            saveFiles(files);
+            showMessage('deleteMsg', '✅ File deleted successfully!', 'success');
+            
+            document.getElementById('deleteName').value = '';
+            listFiles('deleteFileList', 'deleteName');
+        }
+
+        // Initialize file lists
+        window.onload = () => {
+            listFiles('readFileList', 'readName');
+            listFiles('updateFileList', 'updateName');
+            listFiles('deleteFileList', 'deleteName');
+        };
+    </script>
+</body>
+</html>
